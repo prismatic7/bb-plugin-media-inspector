@@ -228,8 +228,8 @@ export default async function plugin(bb: BbPluginApi) {
     parameters: z.object({
       path: z.string().min(1).describe("File path, relative to the project root or absolute."),
     }),
-    async execute({ path }, { projectId }) {
-      const dir = await resolveProjectDir(bb, projectId);
+    async execute({ path }, { threadId, projectId }) {
+      const dir = await threadCwd(bb, threadId, projectId);
       const file = resolvePath(path, dir);
       if (!existsSync(file)) return `media_inspect: no such file: ${file}`;
       const ext = extname(file).toLowerCase();
@@ -278,8 +278,8 @@ export default async function plugin(bb: BbPluginApi) {
       path: z.string().min(1).describe("Path to a ComfyUI-generated image."),
       raw: z.boolean().optional().describe("Also return the prompt JSON verbatim (can be large)."),
     }),
-    async execute({ path, raw }, { projectId }) {
-      const dir = await resolveProjectDir(bb, projectId);
+    async execute({ path, raw }, { threadId, projectId }) {
+      const dir = await threadCwd(bb, threadId, projectId);
       const file = resolvePath(path, dir);
       if (!existsSync(file)) return `comfy_graph: no such file: ${file}`;
       try {
@@ -315,13 +315,32 @@ export default async function plugin(bb: BbPluginApi) {
   });
 }
 
-async function resolveProjectDir(bb: BbPluginApi, projectId: string): Promise<string | null> {
+/** The directory this thread actually works in: its environment's path, not
+ *  the project root. A worktree or an attached workspace is a different
+ *  directory from the project, and resolving paths against the project puts
+ *  files in the wrong tree. */
+export async function threadCwd(bb: BbPluginApi, threadId: string, projectId: string): Promise<string> {
+  const asPath = (v: any): string | null =>
+    v && typeof v === "object" && typeof v.path === "string" && v.path.trim() ? v.path : null;
   try {
-    const project = await bb.sdk.projects.get({ projectId });
-    const source = (project as any)?.sources?.find((s: any) => s.type === "local_path");
-    if (source?.path) return source.path;
+    const t: any = await bb.sdk.threads.get({ threadId } as any);
+    const thread = t?.thread ?? t;
+    const envId = thread?.environmentId;
+    if (envId) {
+      const e: any = await bb.sdk.environments.get({ environmentId: envId } as any);
+      const p = asPath(e?.environment ?? e);
+      if (p) return p;
+    }
   } catch {
-    // fall through
+    // fall through to the project
   }
-  return null;
+  try {
+    const p: any = await bb.sdk.projects.get({ projectId } as any);
+    const sources = (p?.project ?? p)?.sources ?? [];
+    const src = Array.isArray(sources) ? sources.find((s: any) => s.type === "local_path") : null;
+    if (src?.path) return src.path;
+  } catch {
+    // fall through to the server cwd
+  }
+  return process.cwd();
 }
