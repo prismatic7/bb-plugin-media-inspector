@@ -252,7 +252,7 @@ export default async function plugin(bb: BbPluginApi) {
           return renderReport(`${file} (audio)`, [
             ["codec", a.codec],
             ["sample rate", a.sampleRate ? `${a.sampleRate} Hz` : null],
-            ["channels", a.channels ? `${a.channels} (${a.channelLayout})` : null],
+            ["channels", a.channels ? (a.channelLayout ? `${a.channels} (${a.channelLayout})` : `${a.channels}`) : null],
             ["bit depth", a.bitDepth],
             ["bit rate", a.bitRate ? `${Math.round(a.bitRate / 1000)} kb/s` : null],
             ["duration", a.durationSec ? `${a.durationSec.toFixed(2)} s` : null],
