@@ -1,0 +1,12 @@
+bb-plugin-media-inspector
+=========================
+
+Calls two external binaries as tools: exiftool (Perl, Artistic-2.0) and
+ffprobe/ffmpeg (LGPL/GPL). Neither is bundled, linked or copied; the plugin
+spawns them and reads their JSON.
+
+The approach follows the agy-media-inspector plugin authored for Antigravity
+CLI on this machine. This plugin's TypeScript implementation is new; no
+Python source was copied.
+
+Everything in this repository is MIT, original work by prismatic7.

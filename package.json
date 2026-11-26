@@ -1,0 +1,30 @@
+{
+  "name": "bb-plugin-media-inspector",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "bb": ">=0.50",
+    "bbPluginSdk": ">=0.6.157"
+  },
+  "bb": {
+    "name": "Media Inspector",
+    "description": "Inspect generated images and audio files: ComfyUI prompt graphs from PNG metadata, and ffprobe audio parameters with a Whisper-readiness check.",
+    "branding": {
+      "icon": "FileImage"
+    },
+    "server": "./server.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.157",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "bundle": "bb plugin build .",
+    "test": "node --test test/media.test.ts"
+  }
+}
